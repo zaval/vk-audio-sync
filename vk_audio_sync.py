@@ -70,6 +70,13 @@ class VkDaemon(daemon):
 			self.log('не смогли авторизоваться с указанным токеном, запустите config.py')
 			return
 
+		delay = 30
+		if 'main' in self.cnf and 'delay' in self.cnf['main']:
+			try:
+				delay = int(self.cnf['main']['delay'])
+			except:
+				pass
+
 		while True:
 
 			for uid in uids:
@@ -99,7 +106,7 @@ class VkDaemon(daemon):
 					except Exception as e:
 						self.log('не смогли загузить {}: {}'.format(a['url'], e))
 					
-			time.sleep(30)
+			time.sleep(delay)
 
 if __name__ == "__main__":
 		daemon = VkDaemon('/tmp/vk_audio_sync.pid')
