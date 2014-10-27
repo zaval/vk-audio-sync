@@ -16,7 +16,10 @@ class Vk:
 
 	def login(self, login, password):
 
-		r = self.request.get('https://vk.com/')
+		try:
+			r = self.request.get('https://vk.com/')
+		except:
+			return False
 
 		ip_h = re.search(r'ip_h" value="([^"]+)', r.text)
 
@@ -39,13 +42,19 @@ class Vk:
 
 		#~ print(data)
 
-		r = self.request.post('https://login.vk.com/?act=login', data=data)
+		try:
+			r = self.request.post('https://login.vk.com/?act=login', data=data)
+		except:
+			return False
 
 		redirect = re.search(r"onLoginDone\('/([^']+)", r.text)
 
 		if redirect:
-			#~ print(redirect.group(1))
-			r = self.request.get('https://vk.com/{}'.format(redirect.group(1)))
+			try:
+				r = self.request.get('https://vk.com/{}'.format(redirect.group(1)))
+			except:
+				return False
+				
 			uid = re.search(r'"uid":(\d+)', r.text)
 			if uid:
 				self.my_uid = uid.group(1)
@@ -60,13 +69,18 @@ class Vk:
 	def oauth(self):
 		
 		if self.token:
-			r = self.request.get('https://api.vk.com/method/friends.get?v=5.24&access_token={}'.format(self.token))
+			try:
+				r = self.request.get('https://api.vk.com/method/friends.get?v=5.24&access_token={}'.format(self.token))
+			except:
+				return False
 			
 			r = r.json()
 			if 'error' not in r:
 				return True
-		
-		r = self.request.get('https://oauth.vk.com/authorize?client_id={}&redirect_uri=https%3A%2F%2Foauth.vk.com%2Fblank.html&scope=1123330&response_type=token'.format(self.client_id))
+		try:
+			r = self.request.get('https://oauth.vk.com/authorize?client_id={}&redirect_uri=https%3A%2F%2Foauth.vk.com%2Fblank.html&scope=1123330&response_type=token'.format(self.client_id))
+		except:
+			return False
 		
 		token = re.search(r'#access_token=(.+?)&', r.url)
 		if token:
@@ -90,8 +104,11 @@ class Vk:
 			print('cant get hash')
 			return False
 		_hash = _hash.group(1)
-		
-		r = self.request.get('https://login.vk.com/?act=grant_access&client_id={}&settings=1123330&redirect_uri=https%3A%2F%2Foauth.vk.com%2Fblank.html&response_type=token&direct_hash={}&token_type=0&v=&state=&display=page&ip_h={}&hash={}&https=1'.format(client_id, direct_hash, ip_h, _hash))
+
+		try:
+			r = self.request.get('https://login.vk.com/?act=grant_access&client_id={}&settings=1123330&redirect_uri=https%3A%2F%2Foauth.vk.com%2Fblank.html&response_type=token&direct_hash={}&token_type=0&v=&state=&display=page&ip_h={}&hash={}&https=1'.format(client_id, direct_hash, ip_h, _hash))
+		except:
+			return False
 		
 		token = re.search(r'#access_token=(.+?)&', r.url)
 		if token:
@@ -109,8 +126,11 @@ class Vk:
 			uid = self.my_uid
 		
 		url = 'https://api.vk.com/method/audio.get?{}id={}v=5.24&access_token={}'.format('g' if uid.startswith('-') else 'u', uid.replace('-', ''), self.token)
-		
-		r = self.request.get(url)
+
+		try:
+			r = self.request.get(url)
+		except:
+			return False
 		
 		#~ print(r.url)
 		

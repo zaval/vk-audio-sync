@@ -75,6 +75,9 @@ class VkDaemon(daemon):
 			for uid in uids:
 				audios = self.vk.get_audios(uid)
 
+				if not audios:
+					continue
+
 				for a in audios['response']:
 
 					fname = '{}/{}_{}.mp3'.format(path, a['owner_id'], a['aid'])
@@ -82,20 +85,24 @@ class VkDaemon(daemon):
 						continue
 
 					self.log('загружаем аудио {} - {}'.format(a['artist'], a['title']))
-					r = self.vk.request.get(a['url'])
+					try:
+						r = self.vk.request.get(a['url'])
+						with open(fname, 'wb') as f:
+							f.write(r.content)
+
+						tag = stagger.tags.Tag23()
+						tag.artist = a['artist']
+						tag.title = a['title']
+						tag.write(fname)
+
+
+					except Exception as e:
+						self.log('не смогли загузить {}: {}'.format(a['url'], e))
 					
-					with open(fname, 'wb') as f:
-						f.write(r.content)
-
-					tag = stagger.tags.Tag23()
-					tag.artist = a['artist']
-					tag.title = a['title']
-					tag.write(fname)
-
 			time.sleep(30)
 
 if __name__ == "__main__":
-		daemon = VkDaemon('/tmp/vk_sync.pid')
+		daemon = VkDaemon('/tmp/vk_audio_sync.pid')
 		if len(sys.argv) == 2:
 				if 'start' == sys.argv[1]:
 						daemon.start()
